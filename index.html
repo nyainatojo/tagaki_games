@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+     canvas{
+        box-shadow: 1px 1px 7px rgb(57, 60, 255);
+        border: 2px solid rgb(1, 1, 92);
+     }
+     body{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+        flex-direction: column;
+        background-image: url("assets/galaxy.webp");
+        background-position: center;
+        background-size: cover;
+     }
+     h1{
+        color: white;
+        font-size: 50px;
+     }
+     #score{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+        color: white;
+     }
+    </style>
+</head>
+<body>
+<div id="game"> 
+   <h1>🚀SPACE SHOOTER✨</h1>
+   <div id="all">
+        <div id="score">
+            <p id="best_score">Meilleur Score : 0</p>
+        </div>
+        <div id="game_phas"></div>
+   </div>
+</div>
+
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
+   <script>
+    const config = {
+        width:800,
+        height:500,
+        type: Phaser.CANVAS ,
+        physics :{
+            default:'arcade',
+            arcade:{
+                gravity:{y:0},
+                debug:false
+            }
+        },
+        scene : {
+            preload : preload,
+            create: create,
+            update:update
+        }
+    }
+var game = new Phaser.Game(config)
+let cursor,player;
+let score = 0;
+var scoreText = '';
+var all_meteore = [];
+var balles;
+let canSHoot = true;
+var balle;
+let velocity_meteore = 250;
+ let gameover_text,button_restart;
+ var i,max_obs = 10000;
+let lance_obs = true;   
+function preload(){
+    this.load.image('space','assets/space.png') //background_phaser
+    this.load.image('plane','assets/plane.png') //joueur
+    this.load.image('meteore','assets/meteor.png') //obstacle
+     this.load.image('bullet','assets/bullet.png') 
+}
+function create(){
+    const fond = this.add.image(300,300,'space');
+
+   player = this.add.image(300,390,'plane');
+   player.setScale(0.08)
+   this.physics.add.existing(player); 
+    
+balles = this.physics.add.group()
+        newFood.call(this);
+
+         //text score
+     scoreText = this.add.text(10, 10, `Score: ${score}`, {
+        font: '20px Arial',
+        fill: '#ffffff'
+    });
+
+
+ player.body.setCollideWorldBounds(true)
+        cursor = this.input.keyboard.addKeys({
+        up: Phaser.Input.Keyboard.KeyCodes.Z,
+        down: Phaser.Input.Keyboard.KeyCodes.S,
+        left: Phaser.Input.Keyboard.KeyCodes.Q,
+        right: Phaser.Input.Keyboard.KeyCodes.D,
+        space:Phaser.Input.Keyboard.KeyCodes.SPACE
+    });
+  
+
+}
+function update(){
+    let speed = 300;
+    
+        player.body.setVelocity(0); // reset velocity
+
+    if (cursor.up.isDown) player.body.setVelocityY(-speed);
+    if (cursor.down.isDown) player.body.setVelocityY(speed);
+    if (cursor.left.isDown) player.body.setVelocityX(-speed);
+    if (cursor.right.isDown) player.body.setVelocityX(speed);
+    if (cursor.space.isDown && canSHoot){ 
+        tir(this)
+        canSHoot=false
+        setTimeout(()=>{
+            canSHoot = true
+        },100)
+    
+    }
+}
+function gameover(){
+    this.physics.pause();
+     setTimeout(()=>{
+         gameover_text = this.add.text(400,200,'GAME OVER',{
+            fontSize : '100px',
+            color: '#ff0000' 
+        }).setOrigin(0.5)
+
+        button_restart = this.add.text(400,350,'RESTART',{
+            fontSize:'50px',
+            color:'#ff000f',
+            backgroundColor:' #110000'
+
+        }).setOrigin(0.5).setInteractive()
+        button_restart.on('pointerdown',()=>{
+            this.scene.restart()
+        })
+        
+    },100)
+    
+          
+}
+
+function newFood(){
+   if (lance_obs){
+    for ( i = 0;i<max_obs;i++){
+        setTimeout(()=>{
+                 var x_obs = Phaser.Math.Between(20,580);
+    
+                var meteorite = this.add.image(x_obs,-30,'meteore');
+                meteorite.setScale(0.035)    //taille meteorite
+                meteorite.angle = -45       //rotation
+                this.physics.add.existing(meteorite);
+                meteorite.body.setVelocityY(velocity_meteore)
+                
+                 this.physics.add.overlap(player,meteorite,gameover,null,this)
+                   
+  
+                all_meteore.push(meteorite)
+        },i * 500)
+  }     
+}
+}
+function tir(scene){
+  
+    balle = scene.add.image(player.x,player.y-13,'bullet')
+    balle.setScale(0.01)
+    scene.physics.add.existing(balle)
+    balle.body.setVelocityY(-300) 
+    scene.physics.add.overlap(balle,all_meteore,bye,null,scene)
+}
+function bye(balle,allmeteore){
+    allmeteore.destroy()
+       score+=1;
+    scoreText.setText(`Score: ${score}`);
+   if (score%50 == 0){
+    velocity_meteore += 100;
+     all_meteore.forEach(meteor => {
+            if (meteor.active && meteor.body) {
+                meteor.body.setVelocityY(velocity_meteore);
+            }})
+   }
+}
+   </script>
+</body>
+</html>
